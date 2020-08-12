@@ -1,0 +1,3 @@
+{
+    "files": ["gamepad.png","main.py","view.qml","joystickapi.py","close-button.png","close-button-grayed.png"]
+}
