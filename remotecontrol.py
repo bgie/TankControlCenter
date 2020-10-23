@@ -6,7 +6,8 @@ DISCOVER_REFRESH_SEC = 0.500
 DISCOVER_TIMEOUT_SEC = 3.000
 REFRESH_MOTOR_COMMAND_TIMEOUT_SEC = 0.200
 TANK_UDP_PORT = 8001
-CONTROLCENTER_UDP_PORT = 8002
+CONTROL_CENTER_UDP_PORT = 8002
+
 
 class RemoteControl(QObject):
     def __init__(self):
@@ -17,7 +18,7 @@ class RemoteControl(QObject):
 
         self._udpListener = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._udpListener.setblocking(0)
-        self._udpListener.bind(("", CONTROLCENTER_UDP_PORT))
+        self._udpListener.bind(("", CONTROL_CENTER_UDP_PORT))
 
         self._udpCommandSender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._udpCommandSender.settimeout(0.2)
@@ -82,9 +83,5 @@ class RemoteControl(QObject):
                 motor_command = (f"MOTOR {left} {right}").encode('ascii')
                 addr, _ = self._robots[i]
                 self._udpCommandSender.sendto(motor_command, (addr[0], TANK_UDP_PORT))
-
-    @Slot(int, result=bool)
-    def connected(self, i):
-        return i in self._ids
 
     connections_changed = Signal(list)

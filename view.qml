@@ -6,7 +6,7 @@ import QtGraphicalEffects 1.12
 
 ApplicationWindow {
     id: window
-    title: header.text
+    title: "Controle Centrum"
     width: 1200
     height: 800
     visible: true
@@ -27,16 +27,12 @@ ApplicationWindow {
         }
     }
 
-
-    Text {
+    Item {
         id: header
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.left: parent.left
         anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.bottomMargin: 40
-        text: "Controle Centrum"
-        font.pixelSize: 64
-        color: "#E0F0FF"
+        anchors.right: parent.right
+        height: 20
     }
 
     Item {
@@ -71,7 +67,7 @@ ApplicationWindow {
                         border.width: 3
                         radius: 30
 
-                        Rectangle  {
+                        Item  {
                             id: tankImage
                             anchors.centerIn: parent
                             width: 1000 / 2
@@ -80,6 +76,14 @@ ApplicationWindow {
                             Image {
                                 anchors.fill: parent
                                 source: "tank.png"
+                                visible: modelData.connected
+                            }
+                            Text {
+                                anchors.centerIn: parent
+                                text: "?"
+                                font.pixelSize: 48
+                                color: "#000000"
+                                visible: !modelData.connected
                             }
                         }
 
@@ -96,8 +100,46 @@ ApplicationWindow {
                     ColorOverlay {
                         anchors.fill: tankContent
                         source: tankContent
-                        color: "#F0101010"
-                        visible: !modelData.connected
+                        color: "#E7101010"
+                        visible: true // !modelData.connected
+                    }
+
+                    Rectangle {
+                        property color glowing;
+
+                        id: tankSelection
+                        anchors.fill: parent
+                        anchors.margins: 20
+                        color: "transparent"
+                        border.width: 15
+                        radius: 30
+                        border.color: glowing
+
+                        SequentialAnimation on glowing {
+                            loops: Animation.Infinite
+                            ColorAnimation {
+                                from: "#7F0000"
+                                to: "#FF0000"
+                                duration: 500
+                            }
+                            ColorAnimation {
+                                from: "#FF0000"
+                                to: "#7F0000"
+                                duration: 500
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Druk START"
+                            font.pixelSize: 64
+                            color: parent.glowing
+                        }
+                    }
+
+                    Positioner.onIndexChanged: {
+                        var box = TankSelection.box_at_index(tankItem.Positioner.index)
+                        tankSelection.visible = Qt.binding(function() { return box.selected })
                     }
                 }
             }

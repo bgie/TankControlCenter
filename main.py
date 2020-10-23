@@ -6,6 +6,7 @@ from PySide2 import QtCore
 import joysticks
 import remotecontrol
 import tank
+import tankselection
 
 
 def qt_message_handler(mode, context, message):
@@ -31,7 +32,6 @@ if __name__ == '__main__':
     # Expose Python object to QML
     joysticks = joysticks.Joysticks()
     remote_control = remotecontrol.RemoteControl()
-    joysticks.joystickChanged.connect(remote_control.moveTank)
 
     context = engine.rootContext()
     context.setContextProperty("Joysticks", joysticks)
@@ -43,6 +43,12 @@ if __name__ == '__main__':
         remote_control.connections_changed.connect(t.onConnectionsChanged)
         tank_list.append(t)
     context.setContextProperty("Tanks", tank_list)
+
+    tank_selection = tankselection.TankSelection(2, 2)
+    joysticks.added.connect(tank_selection.on_joystick_added)
+    for j in joysticks.joysticks():
+        tank_selection.on_joystick_added(j)
+    context.setContextProperty("TankSelection", tank_selection)
 
     # Load the QML file
     qmlFile = os.path.join(os.path.dirname(__file__), "view.qml")
