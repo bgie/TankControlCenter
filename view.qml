@@ -34,7 +34,7 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.topMargin: 20
         anchors.bottomMargin: 40
-        text: "Maaktank Controlecentrum"
+        text: "Controle Centrum"
         font.pixelSize: 64
         color: "#E0F0FF"
     }
@@ -45,26 +45,28 @@ ApplicationWindow {
         anchors.top: header.bottom
         anchors.bottom: parent.bottom
 
-        Row {
+        Grid {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            height: parent.height / 2
+            height: parent.height
+
+            columns: 2
+            rows: 2
 
             Repeater {
                 model: Tanks
 
                 Item {
-                    id: tank
-                    width: parent.width / 3
-                    height: parent.height
-                    property bool connected: RemoteControl.connected(index+1)
+                    id: tankItem
+                    width: parent.width / parent.columns
+                    height: parent.height / parent.rows
 
                     Rectangle {
                         id: tankContent
                         anchors.fill: parent
                         anchors.margins: 20
-                        color: "#FFFFFF"
+                        color: "#DBD2CD"
                         border.color: "#000000"
                         border.width: 3
                         radius: 30
@@ -72,8 +74,8 @@ ApplicationWindow {
                         Rectangle  {
                             id: tankImage
                             anchors.centerIn: parent
-                            height: 100
-                            width: 300
+                            width: 1000 / 2
+                            height: 718 / 2
 
                             Image {
                                 anchors.fill: parent
@@ -83,9 +85,9 @@ ApplicationWindow {
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: tankImage.top
-                            anchors.bottomMargin: 20
-                            text: "Tank " + (index+1)
+                            anchors.top: parent.top
+                            anchors.topMargin: 20
+                            text: modelData.name
                             font.pixelSize: 48
                             color: "#000000"
                         }
@@ -95,100 +97,11 @@ ApplicationWindow {
                         anchors.fill: tankContent
                         source: tankContent
                         color: "#F0101010"
-                        visible: !tank.connected
-                    }
-
-                    Connections {
-                        target: RemoteControl
-                        function onDiscovered() {
-                            tank.connected = RemoteControl.connected(index+1);
-                        }
+                        visible: !modelData.connected
                     }
                 }
             }
         }
-
-
-        Row {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: parent.height / 2
-
-            Repeater {
-                model: Tanks
-
-                Item {
-                    id: gamepad
-                    width: parent.width / 3
-                    height: parent.height
-                    property bool connected: Joysticks.connected(index+1)
-
-                    Rectangle {
-                        id: gamepadContent
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        anchors.bottomMargin: 40
-                        color: "#FFFFFF"
-                        border.color: "#000000"
-                        border.width: 3
-                        radius: 30
-
-                        Rectangle  {
-                            id: gamepadImage
-                            anchors.centerIn: parent
-                            height: 200
-                            width: 300
-
-                            Image {
-                                anchors.fill: parent
-                                source: "gamepad.png"
-                            }
-                        }
-
-                        Text {
-                            id: player
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: gamepadImage.bottom
-                            text: "Speler " + (index+1)
-                            font.pixelSize: 48
-                            color: "#000000"
-                        }
-
-                        Text {
-                            id: debug
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 10
-                        }
-                    }
-
-                    ColorOverlay {
-                        anchors.fill: gamepadContent
-                        source: gamepadContent
-                        color: "#F0101010"
-                        visible: !gamepad.connected
-                    }
-
-                    Connections {
-                        target: Joysticks
-                        function onRefreshed() {
-                            var connected = Joysticks.connected(index+1);
-                            gamepad.connected = connected;
-                            if(connected) {
-                                debug.text = Joysticks.buttons(index+1).toString(2) + " " +
-                                    Joysticks.x(index+1).toString() + " " +
-                                    Joysticks.y(index+1).toString();
-                            }
-                            else {
-                                debug.text = ""
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
     }
 
     Button {

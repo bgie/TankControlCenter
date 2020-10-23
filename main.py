@@ -1,13 +1,30 @@
 import os, sys
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
-from PySide2.QtCore import Qt
+from PySide2 import QtCore
 
 import joysticks
 import remotecontrol
+import tank
+
+
+def qt_message_handler(mode, context, message):
+    if mode == QtCore.QtInfoMsg:
+        mode = 'Info'
+    elif mode == QtCore.QtWarningMsg:
+        mode = 'Warning'
+    elif mode == QtCore.QtCriticalMsg:
+        mode = 'critical'
+    elif mode == QtCore.QtFatalMsg:
+        mode = 'fatal'
+    else:
+        mode = 'Debug'
+    print("%s: %s (%s:%d, %s)" % (mode, message, context.file, context.line, context.file))
+
 
 if __name__ == '__main__':
     # Set up the application
+    QtCore.qInstallMessageHandler(qt_message_handler)
     app = QGuiApplication(sys.argv)
     engine = QQmlApplicationEngine()
 
@@ -19,7 +36,13 @@ if __name__ == '__main__':
     context = engine.rootContext()
     context.setContextProperty("Joysticks", joysticks)
     context.setContextProperty("RemoteControl", remote_control)
-    context.setContextProperty("Tanks", 3)
+
+    tank_list = []
+    for index in range(1, 5):
+        t = tank.Tank(index)
+        remote_control.connections_changed.connect(t.onConnectionsChanged)
+        tank_list.append(t)
+    context.setContextProperty("Tanks", tank_list)
 
     # Load the QML file
     qmlFile = os.path.join(os.path.dirname(__file__), "view.qml")

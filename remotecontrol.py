@@ -51,6 +51,7 @@ class RemoteControl(QObject):
         if ids != self._ids:
             self._ids = ids
             self.discovered.emit()
+            self.connections_changed.emit(list(ids))
 
     def joystick_to_motor(x, y):
         if x == 0 and y == 0:
@@ -85,3 +86,5 @@ class RemoteControl(QObject):
     @Slot(int, result=bool)
     def connected(self, i):
         return i in self._ids
+
+    connections_changed = Signal(list)
