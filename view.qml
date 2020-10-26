@@ -27,6 +27,21 @@ ApplicationWindow {
         }
     }
 
+    property color glowingRed;
+    SequentialAnimation on glowingRed {
+        loops: Animation.Infinite
+        ColorAnimation {
+            from: "#7F0000"
+            to: "#FF0000"
+            duration: 500
+        }
+        ColorAnimation {
+            from: "#FF0000"
+            to: "#7F0000"
+            duration: 500
+        }
+    }
+
     Item {
         id: header
         anchors.left: parent.left
@@ -36,6 +51,7 @@ ApplicationWindow {
     }
 
     Item {
+        id: content
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: header.bottom
@@ -105,35 +121,19 @@ ApplicationWindow {
                     }
 
                     Rectangle {
-                        property color glowing;
-
                         id: tankSelection
                         anchors.fill: parent
                         anchors.margins: 20
                         color: "transparent"
                         border.width: 15
                         radius: 30
-                        border.color: glowing
-
-                        SequentialAnimation on glowing {
-                            loops: Animation.Infinite
-                            ColorAnimation {
-                                from: "#7F0000"
-                                to: "#FF0000"
-                                duration: 500
-                            }
-                            ColorAnimation {
-                                from: "#FF0000"
-                                to: "#7F0000"
-                                duration: 500
-                            }
-                        }
+                        border.color: window.glowingRed
 
                         Text {
                             anchors.centerIn: parent
                             text: "Druk START"
                             font.pixelSize: 64
-                            color: parent.glowing
+                            color: window.glowingRed
                         }
                     }
 
@@ -181,5 +181,11 @@ ApplicationWindow {
             repeat: true
             onTriggered: refreshesPerSecond.text = "Joystick latency: " + (1000 / Joysticks.refreshesPerSecond()).toFixed(2) + "ms"
         }
+    }
+
+    Image {
+        anchors.centerIn: content
+        visible: !RemoteControl.connected
+        source: "disconnected.png"
     }
 }

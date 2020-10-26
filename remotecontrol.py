@@ -28,6 +28,18 @@ class RemoteControl(QObject):
         self._ids = set()
 
         self._motors = {}
+        self._connected = False
+
+    def is_connected(self):
+        return self._connected
+
+    def set_connected(self, value):
+        if self._connected != value:
+            self._connected = value
+            self.connected_changed.emit(value)
+
+    connected_changed = Signal(bool)
+    connected = Property(bool, is_connected, notify=connected_changed)
 
     discovered = Signal()
 
@@ -35,14 +47,21 @@ class RemoteControl(QObject):
     def discover(self):
         current_time = time.time()
         if current_time > self._discover_timeout_time:
-            self._discover_timeout_time = current_time + DISCOVER_REFRESH_SEC
-            self._udpSender.sendto(b"HI", ("<broadcast>", TANK_UDP_PORT))
+            try:
+                self._discover_timeout_time = current_time + DISCOVER_REFRESH_SEC
+                self._udpSender.sendto(b"HI", ("<broadcast>", TANK_UDP_PORT))
+            except socket.error:
+                self.set_connected(False)
+                return
+            else:
+                self.set_connected(True)
 
-        try:
-            data, addr = self._udpListener.recvfrom(1024)
-            self._robots[int(data.decode('ascii'))] = (addr, current_time + DISCOVER_TIMEOUT_SEC)
-        except socket.error:
-            pass
+        if self._connected:
+            try:
+                data, addr = self._udpListener.recvfrom(1024)
+                self._robots[int(data.decode('ascii'))] = (addr, current_time + DISCOVER_TIMEOUT_SEC)
+            except socket.error:
+                pass
 
         ids = set()
         for i, (addr, expire_time) in self._robots.items():

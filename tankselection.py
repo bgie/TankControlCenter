@@ -79,7 +79,6 @@ class TankSelection(QObject):
         index = x + (y * self._columns)
         return self._boxes[index]
 
-    @Slot(int, result=QObject)
+    @Slot(int, result=SelectionBox)
     def box_at_index(self, index):
-        print(index)
         return self._boxes[index]
