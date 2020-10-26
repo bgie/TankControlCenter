@@ -119,10 +119,3 @@ class JOYINFOEX:
         self.dwSize, self.dwFlags, \
         self.dwXpos, self.dwYpos, self.dwZpos, self.dwRpos, self.dwUpos, self.dwVpos, \
         self.dwButtons, self.dwButtonNumber, self.dwPOV, self.dwReserved1, self.dwReserved2 = uint_array
-
-def map_snes_xy(input):
-    if input < 128:
-        return -1
-    elif input > 65407:
-        return 1
-    return 0

@@ -63,8 +63,8 @@ ApplicationWindow {
             anchors.top: parent.top
             height: parent.height
 
-            columns: 2
-            rows: 2
+            columns: TankColumns
+            rows: TankRows
 
             Repeater {
                 model: Tanks

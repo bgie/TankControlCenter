@@ -38,13 +38,17 @@ if __name__ == '__main__':
     context.setContextProperty("RemoteControl", remote_control)
 
     tank_list = []
-    for index in range(1, 5):
-        t = tank.Tank(index)
+    TANK_ROWS = 2
+    TANK_COLUMNS = 2
+    for index in range(1, TANK_ROWS * TANK_COLUMNS + 1):
+        t = tank.Tank(index, remote_control)
         remote_control.connections_changed.connect(t.onConnectionsChanged)
         tank_list.append(t)
     context.setContextProperty("Tanks", tank_list)
+    context.setContextProperty("TankRows", TANK_ROWS)
+    context.setContextProperty("TankColumns", TANK_COLUMNS)
 
-    tank_selection = tankselection.TankSelection(2, 2)
+    tank_selection = tankselection.TankSelection(TANK_ROWS, TANK_COLUMNS, tank_list)
     joysticks.added.connect(tank_selection.on_joystick_added)
     for j in joysticks.joysticks():
         tank_selection.on_joystick_added(j)

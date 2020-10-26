@@ -25,7 +25,7 @@ class RemoteControl(QObject):
 
         self._discover_timeout_time = time.time()
         self._robots = {}
-        self._ids = set()
+        self._indices = set()
 
         self._motors = {}
         self._connected = False
@@ -63,43 +63,43 @@ class RemoteControl(QObject):
             except socket.error:
                 pass
 
-        ids = set()
+        indices = set()
         for i, (addr, expire_time) in self._robots.items():
             if current_time < expire_time:
-                ids.add(i)
+                indices.add(i)
 
-        if ids != self._ids:
-            self._ids = ids
+        if indices != self._indices:
+            self._indices = indices
             self.discovered.emit()
-            self.connections_changed.emit(list(ids))
+            self.connections_changed.emit(list(indices))
 
+    @staticmethod
     def joystick_to_motor(x, y):
         if x == 0 and y == 0:
-            return (0,0)
+            return 0, 0
         if x == 0:
-            return (y*-1024, y*-1024)
+            return y*-1024, y*-1024
         if x < 0:
             if y == 0:
-                return (-1024, 1024)
+                return -1024, 1024
             else:
-                return (0, y*-1024)
+                return 0, y*-1024
         if x > 0:
             if y == 0:
-                return (1024, -1024)
+                return 1024, -1024
             else:
-                return (y*-1024, 0)
+                return y*-1024, 0
 
-    @Slot(int, int, int, int)
-    def moveTank(self, i, buttons, x, y):
-        if i in self._ids:
+    def send_move_command(self, i, x, y):
+        if i in self._indices:
             current_time = time.time()
             old_x, old_y, refresh_motor_command_time = self._motors.get(i, (0, 0, current_time))
-            isMoving = (x != 0) or (y != 0)
-            needsUpdate = (x != old_x) or (y != old_y) or (isMoving and refresh_motor_command_time < current_time)
-            if needsUpdate:
+            is_moving = (x != 0) or (y != 0)
+            needs_update = (x != old_x) or (y != old_y) or (is_moving and refresh_motor_command_time < current_time)
+            if needs_update:
                 self._motors[i] = (x, y, current_time + REFRESH_MOTOR_COMMAND_TIMEOUT_SEC)
                 left, right = RemoteControl.joystick_to_motor(x, y)
-                motor_command = (f"MOTOR {left} {right}").encode('ascii')
+                motor_command = f"MOTOR {left} {right}".encode('ascii')
                 addr, _ = self._robots[i]
                 self._udpCommandSender.sendto(motor_command, (addr[0], TANK_UDP_PORT))
 

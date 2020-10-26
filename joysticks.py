@@ -1,6 +1,24 @@
-from PySide2.QtCore import Qt, QUrl, QObject, Property, Signal, Slot
+from PySide2.QtCore import QObject, Signal, Slot
 import time
 import joystickapi
+
+
+SNES_BUTTON_A = 0x01
+SNES_BUTTON_B = 0x02
+SNES_BUTTON_X = 0x04
+SNES_BUTTON_Y = 0x08
+SNES_BUTTON_L = 0x10
+SNES_BUTTON_R = 0x20
+SNES_BUTTON_SELECT = 0x40
+SNES_BUTTON_START = 0x80
+
+
+def map_snes_xy(value):
+    if value < 128:
+        return -1
+    elif value > 65407:
+        return 1
+    return 0
 
 
 class Joystick(QObject):
@@ -23,18 +41,21 @@ class Joystick(QObject):
     x_pressed = Signal(int)
     y_pressed = Signal(int)
     buttons_pressed = Signal(int)
-    disconnected = Signal()
+    unplugged = Signal()
 
     def update(self, x, y, buttons):
         new_x = x if (x != self._x) else 0
         new_y = y if (y != self._y) else 0
         new_buttons = buttons & ~self._buttons
 
+        has_changed = (x != self._x) or (y != self._y) or (buttons != self._buttons)
+
         self._x = x
         self._y = y
         self._buttons = buttons
-        self.changed.emit(x, y, buttons)
 
+        if has_changed:
+            self.changed.emit(x, y, buttons)
         if new_x:
             self.x_pressed.emit(new_x)
         if new_y:
@@ -42,8 +63,8 @@ class Joystick(QObject):
         if new_buttons:
             self.buttons_pressed.emit(new_buttons)
 
-    def disconnect(self):
-        self.disconnected.emit()
+    def unplug(self):
+        self.unplugged.emit()
 
 
 class Joysticks(QObject):
@@ -77,14 +98,14 @@ class Joysticks(QObject):
                 if i not in self._joysticks:
                     self._joysticks[i] = Joystick()
                     new_indices.add(i)
-                x = joystickapi.map_snes_xy(info.dwXpos)
-                y = joystickapi.map_snes_xy(info.dwYpos)
+                x = map_snes_xy(info.dwXpos)
+                y = map_snes_xy(info.dwYpos)
                 buttons = info.dwButtons
                 self._joysticks[i].update(x, y, buttons)
 
         missing_indices = self._joysticks.keys() - connected_indices
         for i in missing_indices:
-            self._joysticks.pop(i).disconnect()
+            self._joysticks.pop(i).unplug()
 
         for i in new_indices:
             self.added.emit(self._joysticks[i])
