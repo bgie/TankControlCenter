@@ -11,7 +11,8 @@ SNES_BUTTON_L = 0x10
 SNES_BUTTON_R = 0x20
 SNES_BUTTON_SELECT = 0x40
 SNES_BUTTON_START = 0x80
-
+SNESS_BUTTONS_COUNT = 8
+SNESS_LONG_BUTTON_PRESS_TIME_SEC = 2
 
 def map_snes_xy(value):
     if value < 128:
@@ -24,9 +25,11 @@ def map_snes_xy(value):
 class Joystick(QObject):
     def __init__(self):
         QObject.__init__(self)
-        self._buttons = 0
         self._x = 0
         self._y = 0
+        self._buttons = 0
+        self._long_press_buttons = 0
+        self._button_long_press_time = {}
 
     def x(self):
         return self._x
@@ -37,10 +40,14 @@ class Joystick(QObject):
     def buttons(self):
         return self._buttons
 
+    def long_press_buttons(self):
+        return self._long_press_buttons
+
     changed = Signal(int, int, int)
     x_pressed = Signal(int)
     y_pressed = Signal(int)
     buttons_pressed = Signal(int)
+    long_press_buttons_pressed = Signal(int)
     unplugged = Signal()
 
     def update(self, x, y, buttons):
@@ -48,11 +55,28 @@ class Joystick(QObject):
         new_y = y if (y != self._y) else 0
         new_buttons = buttons & ~self._buttons
 
-        has_changed = (x != self._x) or (y != self._y) or (buttons != self._buttons)
+        long_press_buttons = 0
+        current_time = time.time()
+        for b in [1 << i for i in range(1, SNESS_BUTTONS_COUNT+1)]:
+            if buttons & b:
+                b_long_press_time = self._button_long_press_time.get(b)
+                if b_long_press_time is None:
+                    self._button_long_press_time[b] = current_time + SNESS_LONG_BUTTON_PRESS_TIME_SEC
+                elif b_long_press_time <= current_time:
+                    long_press_buttons = long_press_buttons | b
+            else:
+                self._button_long_press_time.pop(b, None)
+        new_long_press_buttons = long_press_buttons & ~self._long_press_buttons
+
+        has_changed = (x != self._x) or \
+                      (y != self._y) or \
+                      (buttons != self._buttons) or \
+                      (long_press_buttons != self._long_press_buttons)
 
         self._x = x
         self._y = y
         self._buttons = buttons
+        self._long_press_buttons = long_press_buttons
 
         if has_changed:
             self.changed.emit(x, y, buttons)
@@ -62,6 +86,8 @@ class Joystick(QObject):
             self.y_pressed.emit(new_y)
         if new_buttons:
             self.buttons_pressed.emit(new_buttons)
+        if new_long_press_buttons:
+            self.long_press_buttons_pressed.emit(new_long_press_buttons)
 
     def unplug(self):
         self.unplugged.emit()

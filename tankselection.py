@@ -1,7 +1,6 @@
 from PySide2.QtCore import QObject, Property, Signal, Slot
 import joysticks
 
-
 class TankSelector(QObject):
     def __init__(self, rows, columns, selection, joystick):
         QObject.__init__(self)
@@ -103,6 +102,8 @@ class TankSelection(QObject):
             for x in range(0, columns):
                 self._boxes.append(SelectionBox(x, y))
         self._tanks = tanks
+        for t in tanks:
+            t.select_pressed.connect(self.on_tank_select_pressed)
 
     @Slot(joysticks.Joystick)
     def on_joystick_added(self, joystick):
@@ -117,6 +118,11 @@ class TankSelection(QObject):
         selector.set_joystick(None)
         self._selectors.remove(selector)
         tank.set_joystick(joystick)
+
+    def on_tank_select_pressed(self, tank):
+        joystick = tank.joystick()
+        tank.set_joystick(None)
+        self.on_joystick_added(joystick)
 
     def _index(self, x, y):
         return x + (y * self._columns)

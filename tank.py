@@ -1,4 +1,5 @@
 from PySide2.QtCore import QObject, Property, Signal, Slot
+import joysticks
 
 
 class Tank(QObject):
@@ -31,9 +32,11 @@ class Tank(QObject):
         if self._joystick != j:
             if self._joystick is not None:
                 self._joystick.changed.disconnect(self.on_joystick_changed)
+                self._joystick.long_press_buttons_pressed.disconnect(self.on_long_press_buttons_pressed)
             self._joystick = j
             if self._joystick is not None:
                 self._joystick.changed.connect(self.on_joystick_changed)
+                self._joystick.long_press_buttons_pressed.connect(self.on_long_press_buttons_pressed)
             self.joystick_assigned_changed.emit(self.is_joystick_assigned())
 
     joystick_assigned_changed = Signal(bool)
@@ -42,6 +45,13 @@ class Tank(QObject):
     @Slot(int, int, int)
     def on_joystick_changed(self, x, y, buttons):
         self._remote_control.send_move_command(self._index, x, y)
+
+    @Slot(int)
+    def on_long_press_buttons_pressed(self, buttons):
+        if buttons & joysticks.SNES_BUTTON_SELECT:
+            self.select_pressed.emit(self)
+
+    select_pressed = Signal(QObject)
 
     @Slot(list)
     def onConnectionsChanged(self, ids):

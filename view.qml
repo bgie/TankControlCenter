@@ -93,15 +93,6 @@ ApplicationWindow {
                             height: parent.height * 0.8
                         }
 
-                        Image  {
-                            id: gamepadImage
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            anchors.margins: 20
-                            source: "img/gamepad.png"
-                            visible: modelData.joystickAssigned
-                        }
-
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.top: parent.top
@@ -109,6 +100,29 @@ ApplicationWindow {
                             text: modelData.name
                             font.pixelSize: 48
                             color: "#000000"
+                        }
+
+                        Image  {
+                            id: gamepadImage
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 20
+                            source: "img/gamepad.png"
+                            opacity: 0
+                            width: sourceSize.width
+                            height: sourceSize.height
+
+                            states: State {
+                                name: "assigned"
+                                when: modelData.joystickAssigned
+                                PropertyChanges { target: gamepadImage; opacity: 1 }
+                                PropertyChanges { target: gamepadImage; width: sourceSize.width * 0.2 }
+                                PropertyChanges { target: gamepadImage; height: sourceSize.height * 0.2 }
+                            }
+                            transitions: Transition {
+                                PropertyAnimation { properties: "opacity"; duration: 50 }
+                                PropertyAnimation { properties: "width, height"; duration: 300 }
+                            }
                         }
                     }
 
@@ -190,7 +204,7 @@ ApplicationWindow {
 
     Image {
         anchors.centerIn: content
-        visible: !RemoteControl.connected
+        visible: RemoteControl && !RemoteControl.connected
         source: "img/disconnected.png"
     }
 }
