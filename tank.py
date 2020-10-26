@@ -37,7 +37,7 @@ class Tank(QObject):
             self.joystick_assigned_changed.emit(self.is_joystick_assigned())
 
     joystick_assigned_changed = Signal(bool)
-    joystick_assigned = Property(bool, is_joystick_assigned, notify=joystick_assigned_changed)
+    joystickAssigned = Property(bool, is_joystick_assigned, notify=joystick_assigned_changed)
 
     @Slot(int, int, int)
     def on_joystick_changed(self, x, y, buttons):

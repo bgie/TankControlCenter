@@ -41,6 +41,7 @@ ApplicationWindow {
             duration: 500
         }
     }
+    property color tankImageBackgroundColor: "#DBD2CD"
 
     Item {
         id: header
@@ -78,29 +79,27 @@ ApplicationWindow {
                         id: tankContent
                         anchors.fill: parent
                         anchors.margins: 20
-                        color: "#DBD2CD"
+                        color: tankImageBackgroundColor
                         border.color: "#000000"
                         border.width: 3
                         radius: 30
 
-                        Item  {
+                        Image  {
                             id: tankImage
                             anchors.centerIn: parent
-                            width: 1000 / 2
-                            height: 718 / 2
+                            source: "img/tank.png"
+                            fillMode: Image.PreserveAspectFit
+                            width: parent.width * 0.8
+                            height: parent.height * 0.8
+                        }
 
-                            Image {
-                                anchors.fill: parent
-                                source: "tank.png"
-                                visible: modelData.connected
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: "?"
-                                font.pixelSize: 48
-                                color: "#000000"
-                                visible: !modelData.connected
-                            }
+                        Image  {
+                            id: gamepadImage
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 20
+                            source: "img/gamepad.png"
+                            visible: modelData.joystickAssigned
                         }
 
                         Text {
@@ -114,10 +113,11 @@ ApplicationWindow {
                     }
 
                     ColorOverlay {
+                        id: disabledTankOverlay
                         anchors.fill: tankContent
                         source: tankContent
                         color: "#E7101010"
-                        visible: true // !modelData.connected
+                        visible: !modelData.connected
                     }
 
                     Rectangle {
@@ -131,8 +131,13 @@ ApplicationWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Druk START"
-                            font.pixelSize: 64
+                            text: "DRUK START"
+                            font {
+                                pixelSize: 96
+                                bold: true
+                            }
+                            style: Text.Outline
+                            styleColor: disabledTankOverlay.visible ? "#000000" : tankImageBackgroundColor
                             color: window.glowingRed
                         }
                     }
@@ -159,12 +164,12 @@ ApplicationWindow {
         Image {
             visible: closeButton.hovered
             anchors.fill: parent
-            source: "close-button.png"
+            source: "img/close-button.png"
         }
         Image {
             visible: !closeButton.hovered
             anchors.fill: parent
-            source: "close-button-grayed.png"
+            source: "img/close-button-grayed.png"
         }
     }
 
@@ -186,6 +191,6 @@ ApplicationWindow {
     Image {
         anchors.centerIn: content
         visible: !RemoteControl.connected
-        source: "disconnected.png"
+        source: "img/disconnected.png"
     }
 }
