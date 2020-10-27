@@ -6,8 +6,6 @@ import QtGraphicalEffects 1.0
 ApplicationWindow {
     id: window
     title: "Controle Centrum"
-    width: 1200
-    height: 800
     visible: true
     visibility: Qt.WindowFullScreen
     flags: Qt.FramelessWindowHint | Qt.Window

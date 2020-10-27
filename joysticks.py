@@ -1,6 +1,12 @@
 from PySide2.QtCore import QObject, Signal, Slot
 import time
-import joystickapi
+
+import platform
+if platform.system() == 'Windows':
+    import joystickapi_win
+else:
+    print("not done yet!")
+    import joystickapi_win
 
 
 SNES_BUTTON_A = 0x01
@@ -13,6 +19,7 @@ SNES_BUTTON_SELECT = 0x40
 SNES_BUTTON_START = 0x80
 SNESS_BUTTONS_COUNT = 8
 SNESS_LONG_BUTTON_PRESS_TIME_SEC = 2
+
 
 def map_snes_xy(value):
     if value < 128:
@@ -117,8 +124,8 @@ class Joysticks(QObject):
         connected_indices = set()
         new_indices = set()
 
-        for i in range(joystickapi.joyGetNumDevs()):
-            ret, info = joystickapi.joyGetPosEx(i)
+        for i in range(joystickapi_win.joyGetNumDevs()):
+            ret, info = joystickapi_win.joyGetPosEx(i)
             if ret:
                 connected_indices.add(i)
                 if i not in self._joysticks:
