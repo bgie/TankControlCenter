@@ -2,15 +2,15 @@ from PySide2.QtCore import QObject, Property, Signal, Slot
 import joysticks
 
 class TankSelector(QObject):
-    def __init__(self, rows, columns, selection, joystick):
+    def __init__(self, rows, columns, selection, joystick, x=0, y=0):
         QObject.__init__(self)
         self._rows = rows
         self._columns = columns
         self._selection = selection
         self._joystick = None
         self.set_joystick(joystick)
-        self._x = 0
-        self._y = 0
+        self._x = x
+        self._y = y
         self._select()
 
     def clear(self):
@@ -46,11 +46,13 @@ class TankSelector(QObject):
                 self._joystick.x_pressed.disconnect(self.on_x_pressed)
                 self._joystick.y_pressed.disconnect(self.on_y_pressed)
                 self._joystick.buttons_pressed.disconnect(self.on_buttons_pressed)
+                self._joystick.unplugged.disconnect(self.on_unplugged)
             self._joystick = j
             if self._joystick is not None:
                 self._joystick.x_pressed.connect(self.on_x_pressed)
                 self._joystick.y_pressed.connect(self.on_y_pressed)
                 self._joystick.buttons_pressed.connect(self.on_buttons_pressed)
+                self._joystick.unplugged.connect(self.on_unplugged)
 
     @Slot(int)
     def on_x_pressed(self, joystick_x):
@@ -64,6 +66,10 @@ class TankSelector(QObject):
     def on_buttons_pressed(self, buttons):
         if buttons & joysticks.SNES_BUTTON_START:
             self._selection.on_start_pressed(self)
+
+    @Slot()
+    def on_unplugged(self):
+        self._selection.on_unplugged(self)
 
 
 class SelectionBox(QObject):
@@ -118,14 +124,25 @@ class TankSelection(QObject):
         selector.set_joystick(None)
         self._selectors.remove(selector)
         tank.set_joystick(joystick)
+        
+    def on_unplugged(self, selector: TankSelector):
+        joystick = selector.joystick()
+        selector.clear()
+        selector.set_joystick(None)
+        self._selectors.remove(selector)
 
     def on_tank_select_pressed(self, tank):
+        x, y = self._xy(self._tanks.index(tank))
         joystick = tank.joystick()
         tank.set_joystick(None)
-        self.on_joystick_added(joystick)
+        selector = TankSelector(self._rows, self._columns, self, joystick, x, y)
+        self._selectors.add(selector)
 
     def _index(self, x, y):
         return x + (y * self._columns)
+    
+    def _xy(self, index):
+        return index % self._columns, index // self._columns
 
     def box_at_xy(self, x, y):
         return self._boxes[self._index(x, y)]

@@ -119,3 +119,34 @@ class JOYINFOEX:
         self.dwSize, self.dwFlags, \
         self.dwXpos, self.dwYpos, self.dwZpos, self.dwRpos, self.dwUpos, self.dwVpos, \
         self.dwButtons, self.dwButtonNumber, self.dwPOV, self.dwReserved1, self.dwReserved2 = uint_array
+
+
+def map_snes_xy(value):
+    if value < 128:
+        return -1
+    elif value > 65407:
+        return 1
+    return 0
+
+
+def enumerate_joysticks(devices, __):
+    devices = []
+    for i in range(joyGetNumDevs()):
+        ret, info = joyGetPosEx(i)
+        if ret:
+            devices.append(i)
+    return devices, __
+
+
+def poll_joysticks(devices):
+    joysticks = {}
+
+    for i in devices:
+        ret, info = joyGetPosEx(i)
+        if ret:
+            x = map_snes_xy(info.dwXpos)
+            y = map_snes_xy(info.dwYpos)
+            buttons = info.dwButtons
+            joysticks[i] = (x, y, buttons)
+
+    return devices, joysticks

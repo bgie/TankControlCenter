@@ -31,11 +31,11 @@ class Tank(QObject):
     def set_joystick(self, j):
         if self._joystick != j:
             if self._joystick is not None:
-                self._joystick.changed.disconnect(self.on_joystick_changed)
+                self._joystick.polled.disconnect(self.on_joystick_polled)
                 self._joystick.long_press_buttons_pressed.disconnect(self.on_long_press_buttons_pressed)
             self._joystick = j
             if self._joystick is not None:
-                self._joystick.changed.connect(self.on_joystick_changed)
+                self._joystick.polled.connect(self.on_joystick_polled)
                 self._joystick.long_press_buttons_pressed.connect(self.on_long_press_buttons_pressed)
             self.joystick_assigned_changed.emit(self.is_joystick_assigned())
 
@@ -43,7 +43,7 @@ class Tank(QObject):
     joystickAssigned = Property(bool, is_joystick_assigned, notify=joystick_assigned_changed)
 
     @Slot(int, int, int)
-    def on_joystick_changed(self, x, y, buttons):
+    def on_joystick_polled(self, x, y, buttons):
         self._remote_control.send_move_command(self._index, x, y)
 
     @Slot(int)

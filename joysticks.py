@@ -3,11 +3,9 @@ import time
 
 import platform
 if platform.system() == 'Windows':
-    import joystickapi_win
+    import joystickapi_win as joystickapi
 else:
-    print("not done yet!")
-    import joystickapi_win
-
+    import joystickapi_linux as joystickapi
 
 SNES_BUTTON_A = 0x01
 SNES_BUTTON_B = 0x02
@@ -18,16 +16,9 @@ SNES_BUTTON_R = 0x20
 SNES_BUTTON_SELECT = 0x40
 SNES_BUTTON_START = 0x80
 SNESS_BUTTONS_COUNT = 8
+
 SNESS_LONG_BUTTON_PRESS_TIME_SEC = 2
-
-
-def map_snes_xy(value):
-    if value < 128:
-        return -1
-    elif value > 65407:
-        return 1
-    return 0
-
+ENUMERATE_JOYSTICKS_DELAY_SEC = 3
 
 class Joystick(QObject):
     def __init__(self):
@@ -50,6 +41,7 @@ class Joystick(QObject):
     def long_press_buttons(self):
         return self._long_press_buttons
 
+    polled = Signal(int, int, int)
     changed = Signal(int, int, int)
     x_pressed = Signal(int)
     y_pressed = Signal(int)
@@ -85,6 +77,7 @@ class Joystick(QObject):
         self._buttons = buttons
         self._long_press_buttons = long_press_buttons
 
+        self.polled.emit(x, y, buttons)
         if has_changed:
             self.changed.emit(x, y, buttons)
         if new_x:
@@ -103,8 +96,11 @@ class Joystick(QObject):
 class Joysticks(QObject):
     def __init__(self):
         QObject.__init__(self)
+        self._devices = None
+        self._devices_cache = None
         self._joysticks = {}
         self._last_refresh = time.time()
+        self._next_enumerate = time.time()
         self._refreshes = 0
         self.refresh()
 
@@ -121,22 +117,21 @@ class Joysticks(QObject):
 
     @Slot()
     def refresh(self):
-        connected_indices = set()
+        #if self._devices is None: # or self._next_enumerate <= time.time():
+        #    self._next_enumerate = time.time() + ENUMERATE_JOYSTICKS_DELAY_SEC
+        self._devices, self._devices_cache = joystickapi.enumerate_joysticks(self._devices, self._devices_cache)
+        
         new_indices = set()
-
-        for i in range(joystickapi_win.joyGetNumDevs()):
-            ret, info = joystickapi_win.joyGetPosEx(i)
-            if ret:
-                connected_indices.add(i)
-                if i not in self._joysticks:
-                    self._joysticks[i] = Joystick()
-                    new_indices.add(i)
-                x = map_snes_xy(info.dwXpos)
-                y = map_snes_xy(info.dwYpos)
-                buttons = info.dwButtons
-                self._joysticks[i].update(x, y, buttons)
-
-        missing_indices = self._joysticks.keys() - connected_indices
+        self._devices, connected_joysticks = joystickapi.poll_joysticks(self._devices)
+        
+        for index, values in connected_joysticks.items():
+            if index not in self._joysticks:
+                self._joysticks[index] = Joystick()
+                new_indices.add(index)
+            x, y, buttons = values
+            self._joysticks[index].update(x, y, buttons)
+        
+        missing_indices = self._joysticks.keys() - connected_joysticks.keys()
         for i in missing_indices:
             self._joysticks.pop(i).unplug()
 
