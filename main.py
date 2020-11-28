@@ -7,6 +7,7 @@ import joysticks
 import remotecontrol
 import tank
 import tankselection
+import shutdownbutton
 
 
 def qt_message_handler(mode, context, message):
@@ -48,10 +49,14 @@ if __name__ == '__main__':
     context.setContextProperty("TankRows", TANK_ROWS)
     context.setContextProperty("TankColumns", TANK_COLUMNS)
 
+    button = shutdownbutton.ShutdownButton()
+    joysticks.added.connect(button.on_joystick_added)
+
     tank_selection = tankselection.TankSelection(TANK_ROWS, TANK_COLUMNS, tank_list)
     joysticks.added.connect(tank_selection.on_joystick_added)
     for j in joysticks.joysticks():
         tank_selection.on_joystick_added(j)
+        button.on_joystick_added(j)
     context.setContextProperty("TankSelection", tank_selection)
 
     # Load the QML file

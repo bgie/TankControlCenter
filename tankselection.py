@@ -1,6 +1,7 @@
 from PySide2.QtCore import QObject, Property, Signal, Slot
 import joysticks
 
+
 class TankSelector(QObject):
     def __init__(self, rows, columns, selection, joystick, x=0, y=0):
         QObject.__init__(self)
