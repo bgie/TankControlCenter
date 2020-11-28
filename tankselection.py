@@ -119,12 +119,13 @@ class TankSelection(QObject):
 
     def on_start_pressed(self, selector: TankSelector):
         tank = self._tanks[self._index(selector.x(), selector.y())]
-        joystick = selector.joystick()
+        if tank.joystick() is None:
+            joystick = selector.joystick()
 
-        selector.clear()
-        selector.set_joystick(None)
-        self._selectors.remove(selector)
-        tank.set_joystick(joystick)
+            selector.clear()
+            selector.set_joystick(None)
+            self._selectors.remove(selector)
+            tank.set_joystick(joystick)
         
     def on_unplugged(self, selector: TankSelector):
         joystick = selector.joystick()
