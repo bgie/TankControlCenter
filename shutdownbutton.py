@@ -25,7 +25,7 @@ class ShutdownButton(QObject):
                 self._long_button_event_timeout = now + 1
                 self._pressed_buttons = self._pressed_buttons | long_press_buttons
                 if self._pressed_buttons & SHUTDOWN_BUTTONS_COMBO == SHUTDOWN_BUTTONS_COMBO:
-                    os.system("shutdown /s /t 1")
+                    os.system("shutdown -h now")
             else:
                 self._long_button_event_timeout = now + 1
                 self._pressed_buttons = long_press_buttons
